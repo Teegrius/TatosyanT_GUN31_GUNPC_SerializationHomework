@@ -1,0 +1,46 @@
+# =============== #
+# Unity generated #
+# =============== #
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+
+# =============== #
+# IDE / Editors   #
+# =============== #
+.vs/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.unityproj
+
+# =============== #
+# Auto-generated  #
+# =============== #
+ExportedObj/
+*.tmp
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# =============== #
+# Builds / Packs  #
+# =============== #
+*.apk
+*.aab
+*.unitypackage
+
+# =============== #
+# Crash/Reports   #
+# =============== #
+sysinfo.txt
