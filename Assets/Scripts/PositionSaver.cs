@@ -14,13 +14,18 @@ namespace DefaultNamespace
             public float Time;
         }
 
-        [ReadOnly]
+        [System.Serializable]
+        private class RecordsWrapper
+        {
+            public List<Data> Records;
+        }
+
         [Tooltip("Для заполнения воспользуйтесь контекстным меню - 'Create File'")]
-        private TextAsset _json;
+        public TextAsset _json;
 
         [HideInInspector]
         [SerializeField]
-        public List<Data> Records { get; private set; }
+        public List<Data> Records;
 
         private void Awake()
         {
@@ -96,22 +101,36 @@ namespace DefaultNamespace
             }
         }
 
+        [ContextMenu("Save Records")]
+        public void SaveRecordsToFile()
+        {
+#if UNITY_EDITOR
+            if (Records != null && Records.Count > 0)
+            {
+                // Используем wrapper для корректной сериализации
+                var wrapper = new RecordsWrapper { Records = this.Records };
+                string jsonData = JsonUtility.ToJson(wrapper, true);
+
+                string filePath = Path.Combine(Application.dataPath, "Path.txt");
+                File.WriteAllText(filePath, jsonData);
+
+                UnityEditor.AssetDatabase.Refresh();
+                Debug.Log($"Saved {Records.Count} records to file");
+            }
+            else
+            {
+                Debug.LogWarning("No records to save");
+            }
+#endif
+        }
+
         private void OnDestroy()
         {
 #if UNITY_EDITOR
             // ОТВЕТ: Сохраняем данные Records в JSON файл при уничтожении объекта
             if (_json != null && Records != null && Records.Count > 0)
             {
-                // Создаем временный объект для сериализации только Records
-                var saveData = new { Records = this.Records };
-                string jsonData = JsonUtility.ToJson(saveData, true);
-
-                // Записываем в файл
-                string filePath = Path.Combine(Application.dataPath, "Path.txt");
-                File.WriteAllText(filePath, jsonData);
-
-                UnityEditor.AssetDatabase.Refresh();
-                Debug.Log($"Saved {Records.Count} records to {filePath}");
+                SaveRecordsToFile();
             }
 #endif
         }
