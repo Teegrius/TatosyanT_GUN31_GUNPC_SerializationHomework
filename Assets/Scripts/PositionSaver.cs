@@ -14,18 +14,16 @@ namespace DefaultNamespace
             public float Time;
         }
 
-        [System.Serializable]
-        private class RecordsWrapper
-        {
-            public List<Data> Records;
-        }
-
+        [ReadOnly]
         [Tooltip("Для заполнения воспользуйтесь контекстным меню - 'Create File'")]
-        public TextAsset _json;
+        [SerializeField] private TextAsset _json;
 
-        [HideInInspector]
-        [SerializeField]
-        public List<Data> Records;
+        [SerializeField] private List<Data> _records;
+        public List<Data> Records
+        {
+            get => _records ??= new List<Data>();
+            private set => _records = value;
+        }
 
         private void Awake()
         {
@@ -77,14 +75,11 @@ namespace DefaultNamespace
             // Без этого AssetDatabase не сможет работать с файлом (файл заблокирован)
             stream.Dispose();
             UnityEditor.AssetDatabase.Refresh();
-            //В Unity можно искать объекты по их типу, для этого используется префикс "t:"
-            //После нахождения, Юнити возвращает массив гуидов (которые в мета-файлах задаются, например)
+
             var guids = UnityEditor.AssetDatabase.FindAssets("t:TextAsset");
             foreach (var guid in guids)
             {
-                //Этой командой можно получить путь к ассету через его гуид
                 var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
-                //Этой командой можно загрузить сам ассет
                 var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(path);
                 //todo comment: Для чего нужны эти проверки?
                 // ОТВЕТ: Чтобы найти именно TextAsset с именем "Path" и избежать NullReferenceException
@@ -105,15 +100,12 @@ namespace DefaultNamespace
         public void SaveRecordsToFile()
         {
 #if UNITY_EDITOR
-            if (Records != null && Records.Count > 0)
+            if (Records.Count > 0)
             {
-                // Используем wrapper для корректной сериализации
-                var wrapper = new RecordsWrapper { Records = this.Records };
-                string jsonData = JsonUtility.ToJson(wrapper, true);
-
+                // Правильная сериализация без wrapper
+                string jsonData = JsonUtility.ToJson(new Serialization<List<Data>>(Records), true);
                 string filePath = Path.Combine(Application.dataPath, "Path.txt");
                 File.WriteAllText(filePath, jsonData);
-
                 UnityEditor.AssetDatabase.Refresh();
                 Debug.Log($"Saved {Records.Count} records to file");
             }
@@ -127,12 +119,19 @@ namespace DefaultNamespace
         private void OnDestroy()
         {
 #if UNITY_EDITOR
-            // ОТВЕТ: Сохраняем данные Records в JSON файл при уничтожении объекта
-            if (_json != null && Records != null && Records.Count > 0)
+            if (_json != null && Records.Count > 0)
             {
                 SaveRecordsToFile();
             }
 #endif
+        }
+
+        // Класс для правильной сериализации списка
+        [System.Serializable]
+        private class Serialization<T>
+        {
+            public T target;
+            public Serialization(T target) => this.target = target;
         }
 #endif
     }
